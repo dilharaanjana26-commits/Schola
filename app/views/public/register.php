@@ -23,6 +23,24 @@ function registrationSchemaMessage(): string {
     "ALTER TABLE teachers ADD COLUMN status ENUM('pending','approved','rejected') DEFAULT 'pending', ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;";
 }
 
+function ensureRegistrationSchema(PDO $pdo): bool {
+  $tables = ['students', 'teachers'];
+  try {
+    foreach ($tables as $table) {
+      if (!hasColumn($pdo, $table, 'status')) {
+        $pdo->exec("ALTER TABLE {$table} ADD COLUMN status ENUM('pending','approved','rejected') DEFAULT 'pending'");
+      }
+      if (!hasColumn($pdo, $table, 'created_at')) {
+        $pdo->exec("ALTER TABLE {$table} ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP");
+      }
+    }
+  } catch (Exception $e) {
+    return false;
+  }
+
+  return true;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $role = $_POST['role'] ?? '';
 
@@ -34,6 +52,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $error = "Select account type.";
   } elseif ($name === '' || $email === '' || $password === '') {
     $error = "Name, Email and Password are required.";
+  } elseif (!ensureRegistrationSchema($pdo)) {
+    $error = registrationSchemaMessage();
   } else {
     try {
       $studentCheck = $pdo->prepare("SELECT id FROM students WHERE email=? LIMIT 1");
