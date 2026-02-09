@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'creat
     $hash = password_hash($password, PASSWORD_DEFAULT);
 
     try {
-      $stmt = $pdo->prepare("INSERT INTO students (name, age, nic, city, whatsapp, email, password) VALUES (?,?,?,?,?,?,?)");
+      $stmt = $pdo->prepare("INSERT INTO students (name, age, nic, city, whatsapp, email, password, status) VALUES (?,?,?,?,?,?,?, 'approved')");
       $stmt->execute([$name, $age ?: null, $nic ?: null, $city ?: null, $whatsapp ?: null, $email, $hash]);
       header("Location: index.php?page=admin_students&ok=created");
       exit;
@@ -121,18 +121,15 @@ $enrollRows = $pdo->query("
 
 $enrollMap = [];
 foreach ($enrollRows as $r) {
-  $sid = (int)$r['student_id'];
-  if (!isset($enrollMap[$sid])) $enrollMap[$sid] = [];
-  $enrollMap[$sid][] = [
-    'batch_id' => (int)$r['batch_id'],
+  $enrollMap[$r['student_id']][] = [
     'batch_name' => $r['batch_name'],
+    'batch_id' => $r['batch_id'],
     'status' => $r['status'],
   ];
 }
 
 require_once __DIR__ . '/../layout/header.php';
 ?>
-
 <div class="app-shell">
   <?php require_once __DIR__ . '/../layout/sidebar.php'; ?>
   <div class="content">
@@ -142,7 +139,7 @@ require_once __DIR__ . '/../layout/header.php';
       <div class="d-flex align-items-center justify-content-between mb-3">
         <div>
           <div class="fw-bold fs-4">Students</div>
-          <div class="text-muted">Add, edit, remove students and enroll them into batches.</div>
+          <div class="text-muted">Create, edit, remove students and manage enrollments.</div>
         </div>
       </div>
 
@@ -161,7 +158,6 @@ require_once __DIR__ . '/../layout/header.php';
       <div class="grid">
         <!-- Form -->
         <div style="grid-column: span 4;">
-          <div id="addForm"></div>
           <div class="cardx p-4">
             <div class="fw-semibold mb-3">
               <?= $editStudent ? "Edit Student" : "Add New Student" ?>
@@ -177,38 +173,44 @@ require_once __DIR__ . '/../layout/header.php';
 
               <div class="mb-3">
                 <label class="form-label">Full Name</label>
-                <input class="form-control" name="name" required value="<?= e($editStudent['name'] ?? '') ?>">
+                <input class="form-control" name="name" required
+                       value="<?= e($editStudent['name'] ?? '') ?>">
               </div>
 
-              <div class="mb-3">
-                <label class="form-label">Age</label>
-                <input class="form-control" type="number" name="age" value="<?= e($editStudent['age'] ?? '') ?>">
+              <div class="row g-3">
+                <div class="col-md-4">
+                  <label class="form-label">Age</label>
+                  <input class="form-control" type="number" name="age"
+                         value="<?= e($editStudent['age'] ?? '') ?>">
+                </div>
+                <div class="col-md-8">
+                  <label class="form-label">NIC</label>
+                  <input class="form-control" name="nic"
+                         value="<?= e($editStudent['nic'] ?? '') ?>">
+                </div>
               </div>
 
-              <div class="mb-3">
-                <label class="form-label">NIC</label>
-                <input class="form-control" name="nic" value="<?= e($editStudent['nic'] ?? '') ?>">
+              <div class="row g-3 mt-1">
+                <div class="col-md-6">
+                  <label class="form-label">WhatsApp</label>
+                  <input class="form-control" name="whatsapp"
+                         value="<?= e($editStudent['whatsapp'] ?? '') ?>">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">City</label>
+                  <input class="form-control" name="city"
+                         value="<?= e($editStudent['city'] ?? '') ?>">
+                </div>
               </div>
 
-              <div class="mb-3">
-                <label class="form-label">City</label>
-                <input class="form-control" name="city" value="<?= e($editStudent['city'] ?? '') ?>">
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label">WhatsApp Number</label>
-                <input class="form-control" name="whatsapp" value="<?= e($editStudent['whatsapp'] ?? '') ?>">
-              </div>
-
-              <div class="mb-3">
+              <div class="mb-3 mt-3">
                 <label class="form-label">Email</label>
-                <input class="form-control" type="email" name="email" required value="<?= e($editStudent['email'] ?? '') ?>">
+                <input class="form-control" type="email" name="email" required
+                       value="<?= e($editStudent['email'] ?? '') ?>">
               </div>
 
               <div class="mb-3">
-                <label class="form-label">
-                  Password <?= $editStudent ? '<span class="text-muted small">(leave blank to keep old)</span>' : '' ?>
-                </label>
+                <label class="form-label">Password <?= $editStudent ? '(leave blank to keep)' : '' ?></label>
                 <input class="form-control" type="password" name="password" <?= $editStudent ? '' : 'required' ?>>
               </div>
 
@@ -229,7 +231,7 @@ require_once __DIR__ . '/../layout/header.php';
         <!-- Table -->
         <div style="grid-column: span 8;">
           <div class="cardx p-4">
-            <div class="d-flex align-items-center justify-content-between mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-3">
               <div class="fw-semibold">All Students</div>
               <div class="text-muted small"><?= count($students) ?> total</div>
             </div>
@@ -242,7 +244,7 @@ require_once __DIR__ . '/../layout/header.php';
                     <th>Name</th>
                     <th>Email</th>
                     <th>WhatsApp</th>
-                    <th>Enrolled Batches</th>
+                    <th>City</th>
                     <th class="text-end">Actions</th>
                   </tr>
                 </thead>
@@ -252,103 +254,21 @@ require_once __DIR__ . '/../layout/header.php';
                   <?php endif; ?>
 
                   <?php foreach ($students as $s): ?>
-                    <?php $sid = (int)$s['id']; ?>
                     <tr>
                       <td><?= e($s['id']) ?></td>
                       <td class="fw-semibold"><?= e($s['name']) ?></td>
                       <td><?= e($s['email']) ?></td>
-                      <td><?= e($s['whatsapp'] ?? '—') ?></td>
-
-                      <td>
-                        <?php
-                          $en = $enrollMap[$sid] ?? [];
-                          $activeTags = [];
-                          foreach ($en as $x) {
-                            if ($x['status'] === 'active') {
-                              $activeTags[] = $x;
-                            }
-                          }
-                        ?>
-                        <?php if (!$activeTags): ?>
-                          <span class="text-muted">—</span>
-                        <?php else: ?>
-                          <div class="d-flex flex-wrap gap-1">
-                            <?php foreach ($activeTags as $x): ?>
-                              <span class="badge text-bg-light border">
-                                <?= e($x['batch_name']) ?>
-                                <a class="text-danger ms-1"
-                                   style="text-decoration:none"
-                                   onclick="return confirm('Unenroll this student from this batch?')"
-                                   href="index.php?page=admin_students&unenroll_student=<?= $sid ?>&unenroll_batch=<?= (int)$x['batch_id'] ?>">
-                                  ×
-                                </a>
-                              </span>
-                            <?php endforeach; ?>
-                          </div>
-                        <?php endif; ?>
-                      </td>
-
+                      <td><?= e($s['whatsapp']) ?></td>
+                      <td><?= e($s['city']) ?></td>
                       <td class="text-end">
-                        <!-- Enroll button -->
-                        <button class="btn btn-sm btn-outline-success"
-                                data-bs-toggle="modal"
-                                data-bs-target="#enrollModal<?= $sid ?>">
-                          <i class="bi bi-person-plus"></i>
-                        </button>
-
                         <a class="btn btn-sm btn-outline-primary" href="index.php?page=admin_students&edit=<?= e($s['id']) ?>">
                           <i class="bi bi-pencil"></i>
                         </a>
-
                         <a class="btn btn-sm btn-outline-danger"
                            onclick="return confirm('Delete this student?')"
                            href="index.php?page=admin_students&delete=<?= e($s['id']) ?>">
                           <i class="bi bi-trash"></i>
                         </a>
-
-                        <!-- Enroll Modal -->
-                        <div class="modal fade" id="enrollModal<?= $sid ?>" tabindex="-1">
-                          <div class="modal-dialog">
-                            <form method="post" class="modal-content">
-                              <input type="hidden" name="action" value="enroll">
-                              <input type="hidden" name="student_id" value="<?= $sid ?>">
-
-                              <div class="modal-header">
-                                <h5 class="modal-title">Enroll Student</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                              </div>
-
-                              <div class="modal-body">
-                                <div class="mb-3">
-                                  <label class="form-label">Student</label>
-                                  <input class="form-control" value="<?= e($s['name']) ?>" disabled>
-                                </div>
-
-                                <div class="mb-3">
-                                  <label class="form-label">Batch</label>
-                                  <select class="form-select" name="batch_id" required>
-                                    <option value="">-- Select batch --</option>
-                                    <?php foreach ($batches as $b): ?>
-                                      <option value="<?= (int)$b['id'] ?>"><?= e($b['name']) ?></option>
-                                    <?php endforeach; ?>
-                                  </select>
-                                </div>
-
-                                <div class="text-muted small">
-                                  Once enrolled, student will see this batch in “My Content” and can pay to unlock access.
-                                </div>
-                              </div>
-
-                              <div class="modal-footer">
-                                <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Cancel</button>
-                                <button class="btn btn-primary" type="submit">
-                                  <i class="bi bi-check2-circle me-1"></i> Enroll
-                                </button>
-                              </div>
-                            </form>
-                          </div>
-                        </div>
-
                       </td>
                     </tr>
                   <?php endforeach; ?>
@@ -356,11 +276,77 @@ require_once __DIR__ . '/../layout/header.php';
               </table>
             </div>
 
-            <div class="text-muted small">
-              Enrollment controls which batches the student can see and pay for.
+            <div class="mt-4">
+              <div class="fw-semibold mb-2">Enrollments</div>
+              <div class="table-responsive">
+                <table class="table align-middle">
+                  <thead>
+                    <tr class="text-muted">
+                      <th>Student</th>
+                      <th>Batch</th>
+                      <th>Status</th>
+                      <th class="text-end">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <?php foreach ($enrollMap as $studentId => $batchesList): ?>
+                      <?php foreach ($batchesList as $x): ?>
+                        <tr>
+                          <td><?= e($students[array_search($studentId, array_column($students, 'id'))]['name'] ?? '') ?></td>
+                          <td><?= e($x['batch_name']) ?></td>
+                          <td>
+                            <?php
+                              $badge = ($x['status'] === 'active') ? 'text-bg-success' : 'text-bg-secondary';
+                            ?>
+                            <span class="badge <?= $badge ?>"><?= e($x['status']) ?></span>
+                          </td>
+                          <td class="text-end">
+                            <?php if ($x['status'] === 'active'): ?>
+                              <a class="btn btn-sm btn-outline-danger"
+                                 href="index.php?page=admin_students&unenroll_student=<?= e($studentId) ?>&unenroll_batch=<?= e($x['batch_id']) ?>">
+                                Unenroll
+                              </a>
+                            <?php else: ?>
+                              <span class="text-muted small">Inactive</span>
+                            <?php endif; ?>
+                          </td>
+                        </tr>
+                      <?php endforeach; ?>
+                    <?php endforeach; ?>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
+      </div>
+
+      <div class="cardx p-4 mt-4">
+        <div class="fw-semibold mb-2">Enroll Student to Batch</div>
+        <form method="post" class="row g-3">
+          <input type="hidden" name="action" value="enroll">
+          <div class="col-md-5">
+            <label class="form-label">Student</label>
+            <select class="form-select" name="student_id" required>
+              <option value="">Select student</option>
+              <?php foreach ($students as $s): ?>
+                <option value="<?= e($s['id']) ?>"><?= e($s['name']) ?> (<?= e($s['email']) ?>)</option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="col-md-5">
+            <label class="form-label">Batch</label>
+            <select class="form-select" name="batch_id" required>
+              <option value="">Select batch</option>
+              <?php foreach ($batches as $b): ?>
+                <option value="<?= e($b['id']) ?>"><?= e($b['name']) ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="col-md-2 d-flex align-items-end">
+            <button class="btn btn-primary w-100" type="submit">Enroll</button>
+          </div>
+        </form>
       </div>
 
     </div>

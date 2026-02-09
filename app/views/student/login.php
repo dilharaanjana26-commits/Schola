@@ -19,9 +19,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $s = $stmt->fetch();
 
   if ($s && password_verify($pass, $s['password'])) {
-    student_login_session($s);
-    header("Location: index.php?page=student_dashboard");
-    exit;
+    $status = $s['status'] ?? 'pending';
+    if ($status === 'approved') {
+      student_login_session($s);
+      header("Location: index.php?page=student_dashboard");
+      exit;
+    }
+
+    if ($status === 'rejected') {
+      $error = "Rejected. Contact admin.";
+    } else {
+      $error = "Waiting for admin approval.";
+    }
   } else {
     $error = "Invalid login details.";
   }

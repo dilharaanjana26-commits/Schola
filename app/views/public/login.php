@@ -34,30 +34,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // 2) Teacher
-    $st = $pdo->prepare("SELECT * FROM teachers WHERE email=? AND approval_status='approved' LIMIT 1");
+    $st = $pdo->prepare("SELECT * FROM teachers WHERE email=? LIMIT 1");
     $st->execute([$email]);
     $u = $st->fetch();
     if ($u && password_verify($password, $u['password'])) {
-      $_SESSION['role'] = 'teacher';
-      $_SESSION['teacher_id'] = (int)$u['id'];
-      $_SESSION['teacher_name'] = $u['name'];
-      header("Location: index.php?page=teacher_dashboard");
-      exit;
+      $status = $u['status'] ?? 'pending';
+      if ($status === 'approved') {
+        $_SESSION['role'] = 'teacher';
+        $_SESSION['teacher_id'] = (int)$u['id'];
+        $_SESSION['teacher_name'] = $u['name'];
+        header("Location: index.php?page=teacher_dashboard");
+        exit;
+      }
+
+      if ($status === 'rejected') {
+        $error = "Rejected. Contact admin.";
+      } else {
+        $error = "Waiting for admin approval.";
+      }
     }
 
     // 3) Student
-    $st = $pdo->prepare("SELECT * FROM students WHERE email=? AND approval_status='approved' LIMIT 1");
+    $st = $pdo->prepare("SELECT * FROM students WHERE email=? LIMIT 1");
     $st->execute([$email]);
     $u = $st->fetch();
     if ($u && password_verify($password, $u['password'])) {
-      $_SESSION['role'] = 'student';
-      $_SESSION['student_id'] = (int)$u['id'];
-      $_SESSION['student_name'] = $u['name'];
-      header("Location: index.php?page=student_dashboard");
-      exit;
+      $status = $u['status'] ?? 'pending';
+      if ($status === 'approved') {
+        $_SESSION['role'] = 'student';
+        $_SESSION['student_id'] = (int)$u['id'];
+        $_SESSION['student_name'] = $u['name'];
+        header("Location: index.php?page=student_dashboard");
+        exit;
+      }
+
+      if ($status === 'rejected') {
+        $error = "Rejected. Contact admin.";
+      } else {
+        $error = "Waiting for admin approval.";
+      }
     }
 
-    $error = "Invalid login details.";
+    if ($error === '') {
+      $error = "Invalid login details.";
+    }
   }
 }
 ?>
