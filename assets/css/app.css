@@ -1,0 +1,204 @@
+:root{
+  --sidebar:#0b1220;
+  --card:#ffffff;
+  --muted:#6b7280;
+  --shadow: 0 10px 25px rgba(2, 6, 23, .08);
+  --radius: 18px;
+}
+
+.bg-app{ background:#f3f6fb; }
+
+.app-shell{
+  display:flex;
+  min-height:100vh;
+}
+
+.sidebar{
+  width:280px;
+  background: linear-gradient(180deg, #0b1220 0%, #111b2e 100%);
+  position:sticky;
+  top:0;
+  height:100vh;
+}
+
+.logo-badge{
+  width:42px;height:42px;border-radius:14px;
+  display:grid;place-items:center;
+  background: rgba(255,255,255,.12);
+  color:#fff;font-weight:800;
+}
+
+.navlink{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 12px;
+  border-radius:14px;
+  color: rgba(255,255,255,.85);
+  text-decoration:none;
+  margin-bottom:6px;
+  transition: .18s ease;
+}
+
+.navlink:hover{ background: rgba(255,255,255,.08); color:#fff; }
+.navlink.active{ background: rgba(99,102,241,.22); color:#fff; border:1px solid rgba(99,102,241,.30); }
+
+.content{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+}
+
+.topbar{
+  height:64px;
+  background:#fff;
+  border-bottom:1px solid #e9eef7;
+}
+
+.page{
+  padding:20px;
+}
+
+.cardx{
+  background:var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 1px solid #eef2f8;
+}
+
+.metric{
+  padding:18px;
+  border-radius: var(--radius);
+  border:1px solid #eef2f8;
+  box-shadow: var(--shadow);
+  background:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.metric .label{ color:var(--muted); font-size:.92rem; }
+.metric .value{ font-size:1.8rem; font-weight:800; margin:0; }
+.metric .icon{
+  width:44px;height:44px;border-radius:14px;
+  display:grid;place-items:center;
+  background:#f3f6ff;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap:16px;
+}
+
+@media (max-width: 992px){
+  .sidebar{ display:none; }
+  .grid{ grid-template-columns: repeat(6, 1fr); }
+}
+
+/* Theme system using data-theme on <body> */
+body[data-theme="dark"]{
+  background:#0b1220 !important;
+}
+
+body[data-theme="dark"] .bg-app{ background:#0b1220 !important; }
+
+body[data-theme="dark"] .topbar{
+  background:#0f172a;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  color:#e5e7eb;
+}
+
+body[data-theme="dark"] .cardx,
+body[data-theme="dark"] .metric{
+  background:#0f172a;
+  border:1px solid rgba(255,255,255,.08);
+  color:#e5e7eb;
+}
+
+body[data-theme="dark"] .text-muted{ color: rgba(229,231,235,.65) !important; }
+body[data-theme="dark"] .table{ color:#e5e7eb; }
+body[data-theme="dark"] .table thead{ color: rgba(229,231,235,.7); }
+body[data-theme="dark"] .form-control,
+body[data-theme="dark"] .form-select{
+  background:#0b1220;
+  border:1px solid rgba(255,255,255,.10);
+  color:#e5e7eb;
+}
+body[data-theme="dark"] .btn-outline-secondary{
+  border-color: rgba(255,255,255,.18);
+  color:#e5e7eb;
+}
+
+/* Premium icon buttons (topbar) */
+.iconbtn{
+  width:40px;
+  height:40px;
+  border-radius:14px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid #e9eef7;
+  background:#fff;
+  box-shadow: 0 10px 25px rgba(2, 6, 23, .06);
+  color:#111827;
+  text-decoration:none;
+  transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+}
+
+.iconbtn:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 14px 30px rgba(2, 6, 23, .10);
+  border-color:#dbe4f3;
+  color:#111827;
+}
+
+.iconbtn:active{
+  transform: translateY(0px);
+  box-shadow: 0 8px 18px rgba(2, 6, 23, .08);
+}
+
+.iconbtn i{
+  font-size: 1.05rem;
+}
+
+/* Notification count (small pill) */
+.notif-dot{
+  position:absolute;
+  top:-6px;
+  right:-6px;
+  min-width:18px;
+  height:18px;
+  padding:0 5px;
+  border-radius:999px;
+  background:#ef4444;
+  color:#fff;
+  font-size:11px;
+  font-weight:700;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:2px solid #fff;
+}
+
+/* Dark mode premium icon buttons */
+body[data-theme="dark"] .iconbtn{
+  background:#0f172a;
+  border:1px solid rgba(255,255,255,.10);
+  color:#e5e7eb;
+  box-shadow: 0 10px 25px rgba(0,0,0,.25);
+}
+
+body[data-theme="dark"] .iconbtn:hover{
+  border-color: rgba(255,255,255,.18);
+  box-shadow: 0 14px 30px rgba(0,0,0,.35);
+}
+
+.btn-primary{
+  border-radius: 14px !important;
+  box-shadow: 0 10px 25px rgba(37,99,235,.20);
+}
+
+.btn-primary:hover{
+  box-shadow: 0 14px 30px rgba(37,99,235,.28);
+}
