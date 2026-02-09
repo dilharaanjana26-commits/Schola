@@ -7,6 +7,22 @@ $pdo = db();
 $ok = '';
 $error = '';
 
+function hasColumn(PDO $pdo, string $table, string $column): bool {
+  try {
+    $stmt = $pdo->prepare("SHOW COLUMNS FROM {$table} LIKE ?");
+    $stmt->execute([$column]);
+    return (bool)$stmt->fetch();
+  } catch (Exception $e) {
+    return false;
+  }
+}
+
+function registrationSchemaMessage(): string {
+  return "Database schema is missing required columns for registrations. Add status and created_at columns to students/teachers tables.\n\n" .
+    "SQL: ALTER TABLE students ADD COLUMN status ENUM('pending','approved','rejected') DEFAULT 'pending', ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP; " .
+    "ALTER TABLE teachers ADD COLUMN status ENUM('pending','approved','rejected') DEFAULT 'pending', ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;";
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $role = $_POST['role'] ?? '';
 
@@ -19,26 +35,74 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   } elseif ($name === '' || $email === '' || $password === '') {
     $error = "Name, Email and Password are required.";
   } else {
-    $hash = password_hash($password, PASSWORD_DEFAULT);
-
     try {
-      if ($role === 'teacher') {
-        $mobile = trim($_POST['mobile'] ?? '');
-        $st = $pdo->prepare("INSERT INTO teachers (name,email,mobile,password,subscription_status,status) VALUES (?,?,?,?, 'pending', 'pending')");
-        $st->execute([$name, $email, $mobile ?: null, $hash]);
-      } else {
-        $age = (int)($_POST['age'] ?? 0);
-        $nic = trim($_POST['nic'] ?? '');
-        $city = trim($_POST['city'] ?? '');
-        $whatsapp = trim($_POST['whatsapp'] ?? '');
+      $studentCheck = $pdo->prepare("SELECT id FROM students WHERE email=? LIMIT 1");
+      $studentCheck->execute([$email]);
+      $studentExists = (bool)$studentCheck->fetch();
 
-        $st = $pdo->prepare("INSERT INTO students (name,age,nic,city,whatsapp,email,password,status) VALUES (?,?,?,?,?,?,?, 'pending')");
-        $st->execute([$name, $age ?: null, $nic ?: null, $city ?: null, $whatsapp ?: null, $email, $hash]);
+      $teacherCheck = $pdo->prepare("SELECT id FROM teachers WHERE email=? LIMIT 1");
+      $teacherCheck->execute([$email]);
+      $teacherExists = (bool)$teacherCheck->fetch();
+
+      if ($role === 'student' && $studentExists) {
+        $error = "Email already registered. Please login.";
+      } elseif ($role === 'teacher' && $teacherExists) {
+        $error = "Email already registered. Please login.";
+      } elseif ($studentExists || $teacherExists) {
+        $error = "Email already used in another account type.";
       }
-
-      $ok = "Account request submitted. Please wait for admin approval.";
     } catch (Exception $e) {
-      $error = "This email is already used or invalid data.";
+      $error = registrationSchemaMessage();
+    }
+
+    if ($error === '') {
+      $hash = password_hash($password, PASSWORD_DEFAULT);
+      $hasStudentCreatedAt = hasColumn($pdo, 'students', 'created_at');
+      $hasTeacherCreatedAt = hasColumn($pdo, 'teachers', 'created_at');
+
+      try {
+        if ($role === 'teacher') {
+          $mobile = trim($_POST['mobile'] ?? '');
+          $fields = ['name', 'email', 'mobile', 'password', 'subscription_status', 'status'];
+          $values = [$name, $email, $mobile ?: null, $hash, 'pending', 'pending'];
+
+          if ($hasTeacherCreatedAt) {
+            $fields[] = 'created_at';
+            $values[] = date('Y-m-d H:i:s');
+          }
+
+          $placeholders = implode(',', array_fill(0, count($fields), '?'));
+          $stmt = $pdo->prepare("INSERT INTO teachers (" . implode(',', $fields) . ") VALUES ({$placeholders})");
+          $stmt->execute($values);
+        } else {
+          $age = (int)($_POST['age'] ?? 0);
+          $nic = trim($_POST['nic'] ?? '');
+          $city = trim($_POST['city'] ?? '');
+          $whatsapp = trim($_POST['whatsapp'] ?? '');
+
+          $fields = ['name', 'age', 'nic', 'city', 'whatsapp', 'email', 'password', 'status'];
+          $values = [$name, $age ?: null, $nic ?: null, $city ?: null, $whatsapp ?: null, $email, $hash, 'pending'];
+
+          if ($hasStudentCreatedAt) {
+            $fields[] = 'created_at';
+            $values[] = date('Y-m-d H:i:s');
+          }
+
+          $placeholders = implode(',', array_fill(0, count($fields), '?'));
+          $stmt = $pdo->prepare("INSERT INTO students (" . implode(',', $fields) . ") VALUES ({$placeholders})");
+          $stmt->execute($values);
+        }
+
+        $ok = "Account request submitted. Please wait for admin approval.";
+      } catch (Exception $e) {
+        if ($e->getCode() === '23000') {
+          $error = "Email already registered. Please login.";
+        } elseif (stripos($e->getMessage(), 'Unknown column') !== false) {
+          $error = registrationSchemaMessage();
+        } else {
+          $error = "Unable to create account. Please try again.";
+        }
+      }
     }
   }
 }
