@@ -23,6 +23,52 @@ try {
   $posts = [];
 }
 
+$stats = [
+  'approved_teachers' => '—',
+  'active_students' => '—',
+  'batches' => '—',
+  'upcoming_classes' => '—',
+];
+
+try {
+  $teacherColumns = table_columns($pdo, 'teachers');
+  if ($teacherColumns) {
+    $teacherFilter = isset($teacherColumns['status']) ? "WHERE status='approved'" : '';
+    $stats['approved_teachers'] = (int)$pdo->query("SELECT COUNT(*) c FROM teachers {$teacherFilter}")->fetch()['c'];
+  }
+} catch (Exception $e) {
+}
+
+try {
+  $studentColumns = table_columns($pdo, 'students');
+  if ($studentColumns) {
+    $studentFilter = isset($studentColumns['status']) ? "WHERE status='approved'" : '';
+    $stats['active_students'] = (int)$pdo->query("SELECT COUNT(*) c FROM students {$studentFilter}")->fetch()['c'];
+  }
+} catch (Exception $e) {
+}
+
+try {
+  $batchColumns = table_columns($pdo, 'batches');
+  if ($batchColumns) {
+    $stats['batches'] = (int)$pdo->query("SELECT COUNT(*) c FROM batches")->fetch()['c'];
+  }
+} catch (Exception $e) {
+}
+
+try {
+  $classColumns = table_columns($pdo, 'class_schedule');
+  if ($classColumns && isset($classColumns['class_date'])) {
+    $classFilters = ["class_date >= CURDATE()"];
+    if (isset($classColumns['status'])) {
+      $classFilters[] = "status='scheduled'";
+    }
+    $whereClause = implode(' AND ', $classFilters);
+    $stats['upcoming_classes'] = (int)$pdo->query("SELECT COUNT(*) c FROM class_schedule WHERE {$whereClause}")->fetch()['c'];
+  }
+} catch (Exception $e) {
+}
+
 function post_user_name(PDO $pdo, string $type, int $id): string {
   try {
     if ($type === 'teacher') {
@@ -174,25 +220,25 @@ if ($isLoggedIn) {
             <div class="col-6">
               <div class="cardx p-3" style="box-shadow:none;">
                 <div class="muted small">Approved Teachers</div>
-                <div class="fw-bold fs-4">—</div>
+                <div class="fw-bold fs-4"><?= e($stats['approved_teachers']) ?></div>
               </div>
             </div>
             <div class="col-6">
               <div class="cardx p-3" style="box-shadow:none;">
                 <div class="muted small">Active Students</div>
-                <div class="fw-bold fs-4">—</div>
+                <div class="fw-bold fs-4"><?= e($stats['active_students']) ?></div>
               </div>
             </div>
             <div class="col-6">
               <div class="cardx p-3" style="box-shadow:none;">
                 <div class="muted small">Batches Running</div>
-                <div class="fw-bold fs-4">—</div>
+                <div class="fw-bold fs-4"><?= e($stats['batches']) ?></div>
               </div>
             </div>
             <div class="col-6">
               <div class="cardx p-3" style="box-shadow:none;">
                 <div class="muted small">Upcoming Classes</div>
-                <div class="fw-bold fs-4">—</div>
+                <div class="fw-bold fs-4"><?= e($stats['upcoming_classes']) ?></div>
               </div>
             </div>
           </div>
