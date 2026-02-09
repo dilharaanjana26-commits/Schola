@@ -7,7 +7,7 @@ $counts = [
   'students' => (int)db()->query("SELECT COUNT(*) c FROM students")->fetch()['c'],
   'batches'  => (int)db()->query("SELECT COUNT(*) c FROM batches")->fetch()['c'],
   'pending_teacher_payments' => (int)db()->query("SELECT COUNT(*) c FROM teacher_payments WHERE status='pending'")->fetch()['c'],
-  'pending_student_payments' => (int)db()->query("SELECT COUNT(*) c FROM student_payments WHERE status IN ('pending','approved')")->fetch()['c'],
+  'pending_student_payments' => (int)db()->query("SELECT COUNT(*) c FROM student_payments WHERE status='pending'")->fetch()['c'],
   'upcoming_classes' => (int)db()->query("SELECT COUNT(*) c FROM class_schedule WHERE class_date >= CURDATE() AND status='scheduled'")->fetch()['c'],
 ];
 
