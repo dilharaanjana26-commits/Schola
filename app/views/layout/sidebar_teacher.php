@@ -33,6 +33,10 @@ $page = $_GET['page'] ?? '';
     <a class="navlink <?= ($page === 'teacher_schedule') ? 'active' : '' ?>" href="index.php?page=teacher_schedule">
       <i class="bi bi-calendar-event"></i> Class Schedule
     </a>
+
+    <a class="navlink <?= ($page === 'post_create') ? 'active' : '' ?>" href="index.php?page=post_create">
+      <i class="bi bi-megaphone"></i> Create Post
+    </a>
   </div>
 
   <div class="pt-3">

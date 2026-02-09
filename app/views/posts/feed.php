@@ -85,6 +85,20 @@ if ($postIds) {
       background:#111827;color:#fff;font-weight:800;
     }
     .feed-card{border-radius:18px; border:1px solid #eef1f7; background:#fff;}
+    .premium-card{
+      border:1px solid rgba(245,158,11,.6);
+      background:linear-gradient(135deg, rgba(255,247,237,.95), rgba(255,255,255,1));
+      box-shadow:0 18px 40px rgba(245,158,11,.15);
+    }
+    .premium-pill{
+      border-radius:999px;
+      background:rgba(245,158,11,.12);
+      color:#92400e;
+      padding:.2rem .6rem;
+      font-weight:600;
+      font-size:.75rem;
+      border:1px solid rgba(245,158,11,.3);
+    }
     .muted{color:#667085;}
     .actionbtn{
       display:inline-flex;align-items:center;gap:.4rem;
@@ -149,19 +163,34 @@ if ($postIds) {
         $lc = $likesCount[$pid] ?? 0;
         $cc = $commentsCount[$pid] ?? 0;
         $isLiked = isset($userLiked[$pid]);
+        $postType = $p['post_type'] ?? 'update';
+        $isPremium = !empty($p['is_premium']);
+        $paymentAmount = $p['payment_amount'] ?? null;
       ?>
       <div class="col-lg-8">
-        <div class="feed-card p-4" id="post<?= $pid ?>">
+        <div class="feed-card p-4 <?= $isPremium ? 'premium-card' : '' ?>" id="post<?= $pid ?>">
           <div class="d-flex align-items-center gap-2 mb-2">
             <div class="avatar"><?= e($initial) ?></div>
             <div class="flex-grow-1">
               <div class="fw-semibold">
                 <?= e($name) ?>
                 <span class="badge text-bg-light border ms-1"><?= e($p['user_type']) ?></span>
+                <?php if ($isPremium): ?>
+                  <span class="premium-pill ms-1">Premium</span>
+                <?php endif; ?>
               </div>
               <div class="muted small"><?= e($p['created_at']) ?></div>
             </div>
           </div>
+
+          <?php if ($postType === 'payment_request'): ?>
+            <div class="mb-2 d-flex flex-wrap gap-2 align-items-center">
+              <span class="badge text-bg-warning">Payment Request</span>
+              <?php if (!empty($paymentAmount)): ?>
+                <span class="fw-semibold">Amount: <?= e(number_format((float)$paymentAmount, 2)) ?></span>
+              <?php endif; ?>
+            </div>
+          <?php endif; ?>
 
           <div class="mb-2"><?= nl2br(e($p['content'])) ?></div>
 
