@@ -17,9 +17,26 @@ $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $content = trim($_POST['content'] ?? '');
+  $postType = $_POST['post_type'] ?? 'update';
+  $isPremium = ($role === 'teacher' && !empty($_POST['is_premium'])) ? 1 : 0;
+  $paymentAmount = null;
+
+  if ($role !== 'teacher') {
+    $postType = 'update';
+    $isPremium = 0;
+  }
+
+  if ($role === 'teacher' && !in_array($postType, ['update', 'payment_request'], true)) {
+    $postType = 'update';
+  }
 
   if ($content === '') {
     $error = "Post content is required.";
+  } elseif ($postType === 'payment_request') {
+    $paymentAmount = (float)($_POST['payment_amount'] ?? 0);
+    if ($paymentAmount <= 0) {
+      $error = "Enter a valid payment amount.";
+    }
   } else {
     $imagePath = null;
 
@@ -44,8 +61,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (!$error) {
-      $st = $pdo->prepare("INSERT INTO posts (user_type, user_id, content, image_path, status) VALUES (?,?,?,?, 'pending')");
-      $st->execute([$role, $user_id, $content, $imagePath]);
+      $st = $pdo->prepare("INSERT INTO posts (user_type, user_id, content, image_path, status, post_type, payment_amount, is_premium) VALUES (?,?,?,?, 'pending', ?, ?, ?)");
+      $st->execute([$role, $user_id, $content, $imagePath, $postType, $paymentAmount, $isPremium]);
       $msg = "Post submitted! Waiting for admin approval.";
     }
   }
@@ -73,6 +90,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       <div class="cardx p-4">
         <form method="post" enctype="multipart/form-data">
+          <?php if ($role === 'teacher'): ?>
+            <div class="mb-3">
+              <label class="form-label">Post Type</label>
+              <select class="form-select" name="post_type" id="postType">
+                <option value="update">Announcement / Update</option>
+                <option value="payment_request">Payment Request</option>
+              </select>
+            </div>
+
+            <div class="mb-3 d-none" id="paymentAmountWrap">
+              <label class="form-label">Payment Amount</label>
+              <input class="form-control" type="number" step="0.01" min="0" name="payment_amount" placeholder="Enter requested amount">
+              <div class="form-text">Add the amount you want the admin to approve.</div>
+            </div>
+          <?php endif; ?>
+
           <div class="mb-3">
             <label class="form-label">Post Text</label>
             <textarea class="form-control" name="content" rows="5" placeholder="Share an update..." required></textarea>
@@ -82,6 +115,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <label class="form-label">Image (optional)</label>
             <input class="form-control" type="file" name="image">
           </div>
+
+          <?php if ($role === 'teacher'): ?>
+            <div class="form-check mb-3">
+              <input class="form-check-input" type="checkbox" id="isPremium" name="is_premium">
+              <label class="form-check-label" for="isPremium">Mark as premium (highlighted in feed)</label>
+            </div>
+          <?php endif; ?>
 
           <button class="btn btn-primary" type="submit">
             <i class="bi bi-send me-1"></i> Submit Post
@@ -94,5 +134,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
   </div>
 </div>
+
+<script>
+  const postType = document.getElementById('postType');
+  const paymentWrap = document.getElementById('paymentAmountWrap');
+
+  if (postType && paymentWrap) {
+    const togglePayment = () => {
+      if (postType.value === 'payment_request') paymentWrap.classList.remove('d-none');
+      else paymentWrap.classList.add('d-none');
+    };
+    postType.addEventListener('change', togglePayment);
+    togglePayment();
+  }
+</script>
 
 <?php require_once __DIR__ . '/../layout/footer.php'; ?>

@@ -43,6 +43,8 @@ require_once __DIR__ . '/../layout/header.php';
               <tr class="text-muted">
                 <th>#</th>
                 <th>Type</th>
+                <th>Post</th>
+                <th>Amount</th>
                 <th>Content</th>
                 <th>Image</th>
                 <th>Created</th>
@@ -51,12 +53,26 @@ require_once __DIR__ . '/../layout/header.php';
             </thead>
             <tbody>
               <?php if (!$pending): ?>
-                <tr><td colspan="6" class="text-center text-muted py-4">No pending posts.</td></tr>
+                <tr><td colspan="8" class="text-center text-muted py-4">No pending posts.</td></tr>
               <?php endif; ?>
               <?php foreach ($pending as $p): ?>
                 <tr>
                   <td><?= (int)$p['id'] ?></td>
                   <td class="fw-semibold"><?= e($p['user_type']) ?></td>
+                  <td>
+                    <?php $postType = $p['post_type'] ?? 'update'; ?>
+                    <span class="badge text-bg-light border"><?= e(str_replace('_', ' ', $postType)) ?></span>
+                    <?php if (!empty($p['is_premium'])): ?>
+                      <span class="badge text-bg-warning ms-1">Premium</span>
+                    <?php endif; ?>
+                  </td>
+                  <td>
+                    <?php if (($p['post_type'] ?? '') === 'payment_request' && !empty($p['payment_amount'])): ?>
+                      <?= e(number_format((float)$p['payment_amount'], 2)) ?>
+                    <?php else: ?>
+                      <span class="text-muted">—</span>
+                    <?php endif; ?>
+                  </td>
                   <td style="max-width:420px;"><?= e(mb_strimwidth($p['content'], 0, 120, '...')) ?></td>
                   <td>
                     <?php if (!empty($p['image_path'])): ?>
