@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
       if ($role === 'teacher') {
         $mobile = trim($_POST['mobile'] ?? '');
-        $st = $pdo->prepare("INSERT INTO teacher_requests (name,email,mobile,password,status) VALUES (?,?,?,?, 'pending')");
+        $st = $pdo->prepare("INSERT INTO teachers (name,email,mobile,password,subscription_status,status) VALUES (?,?,?,?, 'pending', 'pending')");
         $st->execute([$name, $email, $mobile ?: null, $hash]);
       } else {
         $age = (int)($_POST['age'] ?? 0);
@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $city = trim($_POST['city'] ?? '');
         $whatsapp = trim($_POST['whatsapp'] ?? '');
 
-        $st = $pdo->prepare("INSERT INTO student_requests (name,age,nic,city,whatsapp,email,password,status) VALUES (?,?,?,?,?,?,?, 'pending')");
+        $st = $pdo->prepare("INSERT INTO students (name,age,nic,city,whatsapp,email,password,status) VALUES (?,?,?,?,?,?,?, 'pending')");
         $st->execute([$name, $age ?: null, $nic ?: null, $city ?: null, $whatsapp ?: null, $email, $hash]);
       }
 

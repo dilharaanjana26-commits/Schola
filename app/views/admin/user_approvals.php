@@ -6,6 +6,7 @@ require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../helpers/functions.php';
 
 $pdo = db();
+$pageError = '';
 
 /* ---------------- ACTION HANDLERS ---------------- */
 if (isset($_GET['approve'], $_GET['type'], $_GET['id'])) {
@@ -14,7 +15,12 @@ if (isset($_GET['approve'], $_GET['type'], $_GET['id'])) {
 
   if ($id > 0 && in_array($type, ['student','teacher'], true)) {
     $table = $type === 'student' ? 'students' : 'teachers';
-    $pdo->prepare("UPDATE {$table} SET status='approved' WHERE id=?")->execute([$id]);
+    try {
+      $pdo->prepare("UPDATE {$table} SET status='approved' WHERE id=?")->execute([$id]);
+    } catch (Exception $e) {
+      header("Location: index.php?page=admin_user_approvals&err=update_failed");
+      exit;
+    }
   }
 
   header("Location: index.php?page=admin_user_approvals&ok=approved");
@@ -27,7 +33,12 @@ if (isset($_GET['reject'], $_GET['type'], $_GET['id'])) {
 
   if ($id > 0 && in_array($type, ['student','teacher'], true)) {
     $table = $type === 'student' ? 'students' : 'teachers';
-    $pdo->prepare("UPDATE {$table} SET status='rejected' WHERE id=?")->execute([$id]);
+    try {
+      $pdo->prepare("UPDATE {$table} SET status='rejected' WHERE id=?")->execute([$id]);
+    } catch (Exception $e) {
+      header("Location: index.php?page=admin_user_approvals&err=update_failed");
+      exit;
+    }
   }
 
   header("Location: index.php?page=admin_user_approvals&ok=rejected");
@@ -35,19 +46,25 @@ if (isset($_GET['reject'], $_GET['type'], $_GET['id'])) {
 }
 
 /* ---------------- FETCH PENDING USERS ---------------- */
-$pendingStudents = $pdo->query("
-  SELECT id, name, email, whatsapp, created_at
-  FROM students
-  WHERE status='pending'
-  ORDER BY id DESC
-")->fetchAll();
+$pendingStudents = [];
+$pendingTeachers = [];
+try {
+  $pendingStudents = $pdo->query("
+    SELECT id, name, email, whatsapp, created_at
+    FROM students
+    WHERE status='pending'
+    ORDER BY id DESC
+  ")->fetchAll();
 
-$pendingTeachers = $pdo->query("
-  SELECT id, name, email, mobile, created_at
-  FROM teachers
-  WHERE status='pending'
-  ORDER BY id DESC
-")->fetchAll();
+  $pendingTeachers = $pdo->query("
+    SELECT id, name, email, mobile, created_at
+    FROM teachers
+    WHERE status='pending'
+    ORDER BY id DESC
+  ")->fetchAll();
+} catch (Exception $e) {
+  $pageError = 'Unable to load pending requests. Please ensure the students/teachers tables include status and created_at columns.';
+}
 
 require_once __DIR__ . '/../layout/header.php';
 ?>
@@ -70,6 +87,12 @@ require_once __DIR__ . '/../layout/header.php';
       <?php if (!empty($_GET['ok'])): ?>
         <div class="alert alert-success cardx border-0">
           Action completed: <?= e($_GET['ok']) ?>
+        </div>
+      <?php endif; ?>
+
+      <?php if (!empty($_GET['err']) || $pageError): ?>
+        <div class="alert alert-danger cardx border-0">
+          <?= e($pageError ?: 'Action failed. Please try again.') ?>
         </div>
       <?php endif; ?>
 

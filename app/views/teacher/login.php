@@ -19,9 +19,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $teacher = $stmt->fetch();
 
   if ($teacher && password_verify($pass, $teacher['password'])) {
-    teacher_login_session($teacher);
-    header("Location: index.php?page=teacher_dashboard");
-    exit;
+    $status = $teacher['status'] ?? 'pending';
+    if ($status === 'approved') {
+      teacher_login_session($teacher);
+      header("Location: index.php?page=teacher_dashboard");
+      exit;
+    }
+
+    if ($status === 'rejected') {
+      $error = "Rejected. Contact admin.";
+    } else {
+      $error = "Waiting for admin approval.";
+    }
   } else {
     $error = "Invalid email or password.";
   }

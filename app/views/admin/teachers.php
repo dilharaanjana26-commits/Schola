@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'creat
   if ($name && $email && $pass) {
     $hash = password_hash($pass, PASSWORD_BCRYPT);
 
-    $stmt = $pdo->prepare("INSERT INTO teachers (name,email,password,mobile,subscription_status) VALUES (?,?,?,?, 'pending')");
+    $stmt = $pdo->prepare("INSERT INTO teachers (name,email,password,mobile,subscription_status,status) VALUES (?,?,?,?, 'pending', 'approved')");
     $stmt->execute([$name, $email, $hash, $mobile]);
 
     header("Location: index.php?page=admin_teachers&ok=created");
@@ -232,7 +232,6 @@ require_once __DIR__ . '/../layout/header.php';
                 </tbody>
               </table>
             </div>
-
           </div>
         </div>
       </div>
@@ -240,4 +239,5 @@ require_once __DIR__ . '/../layout/header.php';
     </div>
   </div>
 </div>
+
 <?php require_once __DIR__ . '/../layout/footer.php'; ?>
