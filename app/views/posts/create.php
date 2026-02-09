@@ -9,6 +9,7 @@ if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['teacher','studen
 }
 
 $pdo = db();
+$postColumns = table_columns($pdo, 'posts');
 $role = $_SESSION['role'];
 $user_id = ($role === 'teacher') ? (int)$_SESSION['teacher_id'] : (int)$_SESSION['student_id'];
 
@@ -32,38 +33,73 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   if ($content === '') {
     $error = "Post content is required.";
-  } elseif ($postType === 'payment_request') {
+  }
+
+  if (!$error && $postType === 'payment_request') {
     $paymentAmount = (float)($_POST['payment_amount'] ?? 0);
     if ($paymentAmount <= 0) {
       $error = "Enter a valid payment amount.";
     }
-  } else {
-    $imagePath = null;
+  }
 
-    if (!empty($_FILES['image']['name'])) {
-      $file = $_FILES['image'];
-      $allowedExt = ['jpg','jpeg','png','webp'];
-      $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+  $imagePath = null;
 
-      if (!in_array($ext, $allowedExt, true)) {
-        $error = "Only JPG, PNG, WEBP allowed.";
-      } else {
-        $dir = __DIR__ . '/../../../uploads/posts/';
-        if (!is_dir($dir)) @mkdir($dir, 0777, true);
+  if (!$error && !empty($_FILES['image']['name'])) {
+    $file = $_FILES['image'];
+    $allowedExt = ['jpg','jpeg','png','webp'];
+    $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
 
-        $safe = "{$role}_{$user_id}_" . time() . "." . $ext;
-        $imagePath = "uploads/posts/" . $safe;
+    if (!in_array($ext, $allowedExt, true)) {
+      $error = "Only JPG, PNG, WEBP allowed.";
+    } else {
+      $dir = __DIR__ . '/../../../uploads/posts/';
+      if (!is_dir($dir)) @mkdir($dir, 0777, true);
 
-        if (!move_uploaded_file($file['tmp_name'], $dir . $safe)) {
-          $error = "Image upload failed.";
-        }
+      $safe = "{$role}_{$user_id}_" . time() . "." . $ext;
+      $imagePath = "uploads/posts/" . $safe;
+
+      if (!move_uploaded_file($file['tmp_name'], $dir . $safe)) {
+        $error = "Image upload failed.";
       }
     }
+  }
 
-    if (!$error) {
-      $st = $pdo->prepare("INSERT INTO posts (user_type, user_id, content, image_path, status, post_type, payment_amount, is_premium) VALUES (?,?,?,?, 'pending', ?, ?, ?)");
-      $st->execute([$role, $user_id, $content, $imagePath, $postType, $paymentAmount, $isPremium]);
-      $msg = "Post submitted! Waiting for admin approval.";
+  if (!$error) {
+    $fields = [
+      'user_type' => $role,
+      'user_id' => $user_id,
+      'content' => $content,
+    ];
+
+    if (isset($postColumns['image_path'])) $fields['image_path'] = $imagePath;
+    if (isset($postColumns['status'])) $fields['status'] = 'pending';
+    if (isset($postColumns['post_type'])) $fields['post_type'] = $postType;
+    if (isset($postColumns['payment_amount'])) $fields['payment_amount'] = $paymentAmount;
+    if (isset($postColumns['is_premium'])) $fields['is_premium'] = $isPremium;
+
+    try {
+      $columns = array_keys($fields);
+      $placeholders = implode(',', array_fill(0, count($columns), '?'));
+      $st = $pdo->prepare("INSERT INTO posts (" . implode(',', $columns) . ") VALUES ($placeholders)");
+      $st->execute(array_values($fields));
+      $msg = isset($postColumns['status'])
+        ? "Post submitted! Waiting for admin approval."
+        : "Post submitted!";
+    } catch (Exception $e) {
+      try {
+        $fallback = [
+          'user_type' => $role,
+          'user_id' => $user_id,
+          'content' => $content,
+        ];
+        $columns = array_keys($fallback);
+        $placeholders = implode(',', array_fill(0, count($columns), '?'));
+        $st = $pdo->prepare("INSERT INTO posts (" . implode(',', $columns) . ") VALUES ($placeholders)");
+        $st->execute(array_values($fallback));
+        $msg = "Post submitted!";
+      } catch (Exception $e) {
+        $error = "Unable to save post. Please contact support.";
+      }
     }
   }
 }
