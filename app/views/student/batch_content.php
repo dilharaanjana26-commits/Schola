@@ -140,6 +140,11 @@ $schedule = $sch->fetchAll();
                 <a class="btn btn-sm btn-outline-primary mb-2" target="_blank" href="<?= e($l['youtube_embed_url']) ?>">
                   <i class="bi bi-youtube me-1"></i> Open Live
                 </a>
+                <?php if (!empty($l['zoom_link'])): ?>
+                  <a class="btn btn-sm btn-outline-success mb-2 ms-1" target="_blank" href="<?= e($l['zoom_link']) ?>">
+                    <i class="bi bi-camera-video me-1"></i> Join Zoom
+                  </a>
+                <?php endif; ?>
 
                 <div class="ratio ratio-16x9 mt-2">
                   <iframe src="<?= e($l['youtube_embed_url']) ?>" allowfullscreen></iframe>

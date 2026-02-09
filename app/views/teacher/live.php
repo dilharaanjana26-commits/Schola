@@ -21,6 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $batch_id = (int)($_POST['batch_id'] ?? 0);
   $embed = trim($_POST['youtube_embed_url'] ?? '');
   $schedule_date = trim($_POST['schedule_date'] ?? '');
+  $zoom_link = trim($_POST['zoom_link'] ?? '');
 
   if ($batch_id <= 0 || $embed === '') {
     $error = "Please select a batch and enter embed URL.";
@@ -30,8 +31,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$chk->fetch()) {
       $error = "Invalid batch selection.";
     } else {
-      $stmt = $pdo->prepare("INSERT INTO live_classes (batch_id, youtube_embed_url, schedule_date) VALUES (?, ?, ?)");
-      $stmt->execute([$batch_id, $embed, ($schedule_date ?: null)]);
+      $stmt = $pdo->prepare("INSERT INTO live_classes (batch_id, youtube_embed_url, zoom_link, schedule_date) VALUES (?, ?, ?, ?)");
+      $stmt->execute([$batch_id, $embed, ($zoom_link ?: null), ($schedule_date ?: null)]);
       $msg = "Live class embed added successfully.";
     }
   }
@@ -82,6 +83,12 @@ $items = $list->fetchAll();
               </div>
 
               <div class="mb-3">
+                <label class="form-label">Zoom Meeting Link (optional)</label>
+                <input class="form-control" name="zoom_link"
+                       placeholder="https://zoom.us/j/MEETING_ID">
+              </div>
+
+              <div class="mb-3">
                 <label class="form-label">Schedule Date/Time (optional)</label>
                 <input class="form-control" type="datetime-local" name="schedule_date">
               </div>
@@ -103,12 +110,13 @@ $items = $list->fetchAll();
                   <tr class="text-muted">
                     <th>Batch</th>
                     <th>Schedule</th>
-                    <th>Link</th>
+                    <th>YouTube</th>
+                    <th>Zoom</th>
                   </tr>
                 </thead>
                 <tbody>
                   <?php if (!$items): ?>
-                    <tr><td colspan="3" class="text-center text-muted py-4">No live embeds added yet.</td></tr>
+                    <tr><td colspan="4" class="text-center text-muted py-4">No live embeds added yet.</td></tr>
                   <?php endif; ?>
                   <?php foreach ($items as $i): ?>
                     <tr>
@@ -118,6 +126,15 @@ $items = $list->fetchAll();
                         <a class="btn btn-sm btn-outline-primary" target="_blank" href="<?= e($i['youtube_embed_url']) ?>">
                           <i class="bi bi-box-arrow-up-right me-1"></i> Open
                         </a>
+                      </td>
+                      <td>
+                        <?php if (!empty($i['zoom_link'])): ?>
+                          <a class="btn btn-sm btn-outline-success" target="_blank" href="<?= e($i['zoom_link']) ?>">
+                            <i class="bi bi-camera-video me-1"></i> Join
+                          </a>
+                        <?php else: ?>
+                          <span class="text-muted small">—</span>
+                        <?php endif; ?>
                       </td>
                     </tr>
                   <?php endforeach; ?>
