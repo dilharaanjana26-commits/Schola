@@ -5,6 +5,7 @@ require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../helpers/functions.php';
 
 $pdo = db();
+$postColumns = table_columns($pdo, 'posts');
 
 $isLoggedIn = isset($_SESSION['role']) && in_array($_SESSION['role'], ['teacher','student','admin'], true);
 $canInteract = isset($_SESSION['role']) && in_array($_SESSION['role'], ['teacher','student'], true);
@@ -12,7 +13,11 @@ $canInteract = isset($_SESSION['role']) && in_array($_SESSION['role'], ['teacher
 // latest posts (approved only)
 $posts = [];
 try {
-  $posts = $pdo->query("SELECT * FROM posts WHERE status='approved' ORDER BY id DESC LIMIT 10")->fetchAll();
+  if (isset($postColumns['status'])) {
+    $posts = $pdo->query("SELECT * FROM posts WHERE status='approved' ORDER BY id DESC LIMIT 10")->fetchAll();
+  } else {
+    $posts = $pdo->query("SELECT * FROM posts ORDER BY id DESC LIMIT 10")->fetchAll();
+  }
 } catch (Exception $e) {
   // If DB/table issue, do not crash the homepage
   $posts = [];

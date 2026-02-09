@@ -5,21 +5,37 @@ require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../helpers/functions.php';
 
 $pdo = db();
+$postColumns = table_columns($pdo, 'posts');
+$canModerate = isset($postColumns['status']);
 
-if (isset($_GET['approve'])) {
+if ($canModerate && isset($_GET['approve'])) {
   $id = (int)$_GET['approve'];
   $pdo->prepare("UPDATE posts SET status='approved' WHERE id=?")->execute([$id]);
   header("Location: index.php?page=admin_post_approvals&ok=approved");
   exit;
 }
-if (isset($_GET['reject'])) {
+if ($canModerate && isset($_GET['reject'])) {
   $id = (int)$_GET['reject'];
   $pdo->prepare("UPDATE posts SET status='rejected' WHERE id=?")->execute([$id]);
   header("Location: index.php?page=admin_post_approvals&ok=rejected");
   exit;
 }
 
-$pending = $pdo->query("SELECT * FROM posts WHERE status='pending' ORDER BY id DESC")->fetchAll();
+$pending = [];
+if ($canModerate) {
+  try {
+    $pending = $pdo->query("SELECT * FROM posts WHERE status='pending' ORDER BY id DESC")->fetchAll();
+  } catch (Exception $e) {
+    $canModerate = false;
+  }
+}
+if (!$canModerate) {
+  try {
+    $pending = $pdo->query("SELECT * FROM posts ORDER BY id DESC")->fetchAll();
+  } catch (Exception $e) {
+    $pending = [];
+  }
+}
 
 require_once __DIR__ . '/../layout/header.php';
 ?>
@@ -31,6 +47,12 @@ require_once __DIR__ . '/../layout/header.php';
     <div class="page">
       <div class="fw-bold fs-4 mb-1">Post Approvals</div>
       <div class="text-muted mb-3">Approve teacher/student posts before they appear on the public feed.</div>
+
+      <?php if (!$canModerate): ?>
+        <div class="alert alert-warning cardx border-0">
+          Approval status is unavailable because the posts table does not include a status column.
+        </div>
+      <?php endif; ?>
 
       <?php if (!empty($_GET['ok'])): ?>
         <div class="alert alert-success cardx border-0">Action completed: <?= e($_GET['ok']) ?></div>
@@ -73,7 +95,7 @@ require_once __DIR__ . '/../layout/header.php';
                       <span class="text-muted">—</span>
                     <?php endif; ?>
                   </td>
-                  <td style="max-width:420px;"><?= e(mb_strimwidth($p['content'], 0, 120, '...')) ?></td>
+                  <td style="max-width:420px;"><?= e(text_excerpt((string)$p['content'], 120)) ?></td>
                   <td>
                     <?php if (!empty($p['image_path'])): ?>
                       <a target="_blank" href="<?= e($p['image_path']) ?>">View</a>
@@ -83,12 +105,16 @@ require_once __DIR__ . '/../layout/header.php';
                   </td>
                   <td class="text-muted small"><?= e($p['created_at']) ?></td>
                   <td class="text-end">
-                    <a class="btn btn-sm btn-success" href="index.php?page=admin_post_approvals&approve=<?= (int)$p['id'] ?>">
-                      <i class="bi bi-check2"></i>
-                    </a>
-                    <a class="btn btn-sm btn-outline-danger" href="index.php?page=admin_post_approvals&reject=<?= (int)$p['id'] ?>">
-                      <i class="bi bi-x"></i>
-                    </a>
+                    <?php if ($canModerate): ?>
+                      <a class="btn btn-sm btn-success" href="index.php?page=admin_post_approvals&approve=<?= (int)$p['id'] ?>">
+                        <i class="bi bi-check2"></i>
+                      </a>
+                      <a class="btn btn-sm btn-outline-danger" href="index.php?page=admin_post_approvals&reject=<?= (int)$p['id'] ?>">
+                        <i class="bi bi-x"></i>
+                      </a>
+                    <?php else: ?>
+                      <span class="text-muted">—</span>
+                    <?php endif; ?>
                   </td>
                 </tr>
               <?php endforeach; ?>

@@ -4,6 +4,7 @@ require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../helpers/functions.php';
 
 $pdo = db();
+$postColumns = table_columns($pdo, 'posts');
 
 // login state
 $isLoggedIn = isset($_SESSION['role']) && in_array($_SESSION['role'], ['teacher','student','admin'], true);
@@ -29,7 +30,11 @@ function post_user_name(PDO $pdo, string $type, int $id): string {
 // Load approved posts
 $posts = [];
 try {
-  $posts = $pdo->query("SELECT * FROM posts WHERE status='approved' ORDER BY id DESC LIMIT 50")->fetchAll();
+  if (isset($postColumns['status'])) {
+    $posts = $pdo->query("SELECT * FROM posts WHERE status='approved' ORDER BY id DESC LIMIT 50")->fetchAll();
+  } else {
+    $posts = $pdo->query("SELECT * FROM posts ORDER BY id DESC LIMIT 50")->fetchAll();
+  }
 } catch (Exception $e) {
   $posts = [];
 }
