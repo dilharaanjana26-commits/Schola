@@ -168,6 +168,13 @@
     height:36px;
     border-radius:12px;
   }
+
+  .mobile-menu-btn{
+    height:36px;
+    padding:0 .75rem;
+    border-radius:12px;
+    font-size:.78rem;
+  }
 }
 
 @media (max-width: 576px){
@@ -222,6 +229,44 @@ body[data-theme="dark"] .form-select{
 body[data-theme="dark"] .btn-outline-secondary{
   border-color: rgba(255,255,255,.18);
   color:#e5e7eb;
+}
+
+
+.mobile-menu-btn{
+  align-items:center;
+  gap:.45rem;
+  height:40px;
+  padding:0 .9rem;
+  border-radius:14px;
+  border:1px solid #dbe4f3;
+  background:linear-gradient(135deg, #ffffff 0%, #f4f7ff 100%);
+  box-shadow:0 10px 25px rgba(37,99,235,.14);
+  color:#0f172a;
+  font-size:.85rem;
+  font-weight:700;
+  letter-spacing:.01em;
+  transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+}
+
+.mobile-menu-btn:hover{
+  transform:translateY(-1px);
+  box-shadow:0 14px 30px rgba(37,99,235,.2);
+  border-color:#c7d6f3;
+}
+
+.mobile-menu-btn:active{
+  transform:translateY(0);
+}
+
+.mobile-menu-btn i{
+  font-size:.95rem;
+}
+
+body[data-theme="dark"] .mobile-menu-btn{
+  background:linear-gradient(135deg, #17233a 0%, #0f172a 100%);
+  border:1px solid rgba(255,255,255,.12);
+  color:#e5e7eb;
+  box-shadow:0 12px 28px rgba(0,0,0,.35);
 }
 
 /* Premium icon buttons (topbar) */

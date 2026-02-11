@@ -66,7 +66,7 @@ $page = $_GET['page'] ?? '';
   </div>
 </div>
 
-<div class="offcanvas offcanvas-start sidebar-offcanvas d-lg-none" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
+<div class="offcanvas offcanvas-start sidebar-offcanvas d-md-none" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
   <div class="offcanvas-header border-bottom border-light border-opacity-10">
     <h5 class="offcanvas-title text-white" id="mobileSidebarLabel">Schola Admin</h5>
     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
