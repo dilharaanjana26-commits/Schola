@@ -57,8 +57,9 @@ $theme = $_COOKIE['schola_theme'] ?? 'light';
     </button>
 
     <div>
-      <div class="fw-semibold fs-5"><?= htmlspecialchars($title) ?></div>
-      <div class="text-muted small">
+      <div class="topbar-title">
+      <div class="title-main"><?= htmlspecialchars($title) ?></div>
+      <div class="title-crumb">
         <?php foreach ($crumb as $i => $c): ?>
           <?= htmlspecialchars($c) ?><?= ($i < count($crumb)-1) ? ' / ' : '' ?>
         <?php endforeach; ?>
@@ -67,7 +68,7 @@ $theme = $_COOKIE['schola_theme'] ?? 'light';
   </div>
 
   <!-- RIGHT: Actions + Icons + Admin -->
-  <div class="d-flex align-items-center gap-2">
+  <div class="d-flex align-items-center gap-2 topbar-right">
 
     <?php if ($action): ?>
       <a class="btn btn-sm btn-primary" href="<?= htmlspecialchars($action['url']) ?>">
@@ -97,7 +98,7 @@ $theme = $_COOKIE['schola_theme'] ?? 'light';
       (isset($_SESSION['student_id']) ? 'Student' : '') );
     ?>
 
-    <span class="badge rounded-pill text-bg-light border">
+    <span class="badge rounded-pill text-bg-light border topbar-user">
       <i class="bi bi-person-circle me-1"></i>
       <?= htmlspecialchars($userRole) ?> - <?= htmlspecialchars($userLabel) ?>
     </span>
