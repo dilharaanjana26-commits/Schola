@@ -54,6 +54,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           </button>
         </form>
 
+        <div class="text-center mt-3">
+          <a class="btn btn-outline-secondary" href="index.php?page=home">← Home</a>
+        </div>
+
         <div class="text-muted small mt-3">
           Default: admin@schola.lk / Admin@123
         </div>
