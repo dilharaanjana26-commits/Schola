@@ -50,10 +50,12 @@ $theme = $_COOKIE['schola_theme'] ?? 'light';
 
   <!-- LEFT: Mobile menu + Title + Breadcrumb -->
   <div class="d-flex align-items-center gap-2">
-    <!-- Mobile hamburger -->
-    <button class="iconbtn d-inline-flex d-lg-none" type="button"
-            data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
-      <i class="bi bi-list"></i>
+    <!-- Mobile menu trigger -->
+    <button class="mobile-menu-btn d-inline-flex d-md-none" type="button"
+            data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar"
+            aria-label="Open sidebar menu">
+      <i class="bi bi-grid-3x3-gap-fill"></i>
+      <span>Menu</span>
     </button>
 
     <div>
