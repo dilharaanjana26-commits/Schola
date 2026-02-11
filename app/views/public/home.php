@@ -34,7 +34,7 @@ try {
   $teacherColumns = table_columns($pdo, 'teachers');
   if ($teacherColumns) {
     $teacherFilter = isset($teacherColumns['status']) ? "WHERE status='approved'" : '';
-    $stats['approved_teachers'] = (int)$pdo->query("SELECT COUNT(*) c FROM teachers {$teacherFilter}")->fetch()['c'];
+    $stats['approved_teachers'] = (int)$pdo->query("SELECT COUNT(*) FROM teachers {$teacherFilter}")->fetchColumn();
   }
 } catch (Exception $e) {
 }
@@ -43,16 +43,14 @@ try {
   $studentColumns = table_columns($pdo, 'students');
   if ($studentColumns) {
     $studentFilter = isset($studentColumns['status']) ? "WHERE status='approved'" : '';
-    $stats['active_students'] = (int)$pdo->query("SELECT COUNT(*) c FROM students {$studentFilter}")->fetch()['c'];
+    $stats['active_students'] = (int)$pdo->query("SELECT COUNT(*) FROM students {$studentFilter}")->fetchColumn();
   }
 } catch (Exception $e) {
 }
 
 try {
-  $batchColumns = table_columns($pdo, 'batches');
-  if ($batchColumns) {
-    $stats['batches'] = (int)$pdo->query("SELECT COUNT(*) c FROM batches")->fetch()['c'];
-  }
+  // Keep this in sync with admin dashboard batch metric.
+  $stats['batches'] = (int)$pdo->query("SELECT COUNT(*) FROM batches")->fetchColumn();
 } catch (Exception $e) {
 }
 
@@ -64,7 +62,7 @@ try {
       $classFilters[] = "status='scheduled'";
     }
     $whereClause = implode(' AND ', $classFilters);
-    $stats['upcoming_classes'] = (int)$pdo->query("SELECT COUNT(*) c FROM class_schedule WHERE {$whereClause}")->fetch()['c'];
+    $stats['upcoming_classes'] = (int)$pdo->query("SELECT COUNT(*) FROM class_schedule WHERE {$whereClause}")->fetchColumn();
   }
 } catch (Exception $e) {
 }
