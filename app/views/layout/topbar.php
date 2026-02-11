@@ -58,11 +58,12 @@ $theme = $_COOKIE['schola_theme'] ?? 'light';
 
     <div>
       <div class="topbar-title">
-      <div class="title-main"><?= htmlspecialchars($title) ?></div>
-      <div class="title-crumb">
-        <?php foreach ($crumb as $i => $c): ?>
-          <?= htmlspecialchars($c) ?><?= ($i < count($crumb)-1) ? ' / ' : '' ?>
-        <?php endforeach; ?>
+        <div class="title-main"><?= htmlspecialchars($title) ?></div>
+        <div class="title-crumb">
+          <?php foreach ($crumb as $i => $c): ?>
+            <?= htmlspecialchars($c) ?><?= ($i < count($crumb)-1) ? ' / ' : '' ?>
+          <?php endforeach; ?>
+        </div>
       </div>
     </div>
   </div>
