@@ -58,6 +58,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           </div>
           <button class="btn btn-primary w-100">Login</button>
         </form>
+
+        <div class="text-center mt-3">
+          <a class="btn btn-outline-secondary" href="index.php?page=home">← Home</a>
+        </div>
       </div>
     </div>
   </div>
