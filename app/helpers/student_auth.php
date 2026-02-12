@@ -15,5 +15,5 @@ function student_login_session(array $s) {
 }
 
 function student_logout() {
-  unset($_SESSION['student_id'], $_SESSION['student_name'], $_SESSION['student_email']);
+  unset($_SESSION['role'], $_SESSION['student_id'], $_SESSION['student_name'], $_SESSION['student_email']);
 }
