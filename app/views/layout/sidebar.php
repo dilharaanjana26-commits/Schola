@@ -54,6 +54,10 @@ $page = $_GET['page'] ?? '';
       <i class="bi bi-megaphone"></i> Post Approvals
     </a>
 
+    <a class="navlink <?= ($page === 'admin_posts') ? 'active' : '' ?>" href="index.php?page=admin_posts">
+      <i class="bi bi-file-post"></i> Posts
+    </a>
+
     <a class="navlink <?= ($page === 'admin_reports') ? 'active' : '' ?>" href="index.php?page=admin_reports">
       <i class="bi bi-bar-chart"></i> Reports
     </a>
@@ -105,6 +109,9 @@ $page = $_GET['page'] ?? '';
       </a>
       <a class="navlink <?= ($page === 'admin_post_approvals') ? 'active' : '' ?>" href="index.php?page=admin_post_approvals" data-bs-dismiss="offcanvas">
         <i class="bi bi-megaphone"></i> Post Approvals
+      </a>
+      <a class="navlink <?= ($page === 'admin_posts') ? 'active' : '' ?>" href="index.php?page=admin_posts" data-bs-dismiss="offcanvas">
+        <i class="bi bi-file-post"></i> Posts
       </a>
       <a class="navlink <?= ($page === 'admin_reports') ? 'active' : '' ?>" href="index.php?page=admin_reports" data-bs-dismiss="offcanvas">
         <i class="bi bi-bar-chart"></i> Reports
