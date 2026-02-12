@@ -29,6 +29,7 @@ $routes = [
   // ✅ Admin approvals (ONLY ONCE!)
   'admin_user_approvals'  => __DIR__ . '/app/views/admin/user_approvals.php',
   'admin_post_approvals'  => __DIR__ . '/app/views/admin/post_approvals.php',
+  'admin_posts'           => __DIR__ . '/app/views/admin/posts.php',
 
   // Teacher
   'teacher_login'        => __DIR__ . '/app/views/teacher/login.php',
@@ -38,6 +39,7 @@ $routes = [
   'teacher_content'      => __DIR__ . '/app/views/teacher/content.php',
   'teacher_live'         => __DIR__ . '/app/views/teacher/live.php',
   'teacher_schedule'     => __DIR__ . '/app/views/teacher/schedule.php',
+  'teacher_posts'        => __DIR__ . '/app/views/teacher/posts.php',
 
   // Student
   'student_login'        => __DIR__ . '/app/views/student/login.php',

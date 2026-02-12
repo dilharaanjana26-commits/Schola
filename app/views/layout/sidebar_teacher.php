@@ -37,6 +37,10 @@ $page = $_GET['page'] ?? '';
     <a class="navlink <?= ($page === 'post_create') ? 'active' : '' ?>" href="index.php?page=post_create">
       <i class="bi bi-megaphone"></i> Create Post
     </a>
+
+    <a class="navlink <?= ($page === 'teacher_posts') ? 'active' : '' ?>" href="index.php?page=teacher_posts">
+      <i class="bi bi-file-post"></i> Posts
+    </a>
   </div>
 
   <div class="pt-3">
@@ -73,6 +77,10 @@ $page = $_GET['page'] ?? '';
       </a>
       <a class="navlink <?= ($page === 'post_create') ? 'active' : '' ?>" href="index.php?page=post_create" data-bs-dismiss="offcanvas">
         <i class="bi bi-megaphone"></i> Create Post
+      </a>
+
+      <a class="navlink <?= ($page === 'teacher_posts') ? 'active' : '' ?>" href="index.php?page=teacher_posts" data-bs-dismiss="offcanvas">
+        <i class="bi bi-file-post"></i> Posts
       </a>
 
       <div class="pt-3">
